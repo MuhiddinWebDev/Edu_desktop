@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, ipcMain, globalShortcut, dialog } from 'electron'
+import { app, BrowserWindow, shell, ipcMain, globalShortcut, dialog, screen } from 'electron'
 import { release } from 'node:os'
 import { join } from 'node:path'
 import { autoUpdater } from 'electron-updater'
@@ -34,15 +34,19 @@ const url = process.env.VITE_DEV_SERVER_URL
 const indexHtml = join(process.env.DIST, 'index.html')
 
 async function createWindow() {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   win = new BrowserWindow({
     title: 'Main window',
     icon: join(process.env.VITE_PUBLIC, 'favicon.ico'),
+    width:width,
+    height: height,
     webPreferences: {
       preload,
-      nodeIntegration: false, // Disable Node.js integration
+      nodeIntegration: true, // Disable Node.js integration
       contextIsolation: true, // Enable context isolation
       sandbox: true,
-      webSecurity: false,
+      webSecurity: true,
+      devTools:true
     },
     autoHideMenuBar: true
   })
