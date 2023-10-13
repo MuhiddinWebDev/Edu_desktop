@@ -6,8 +6,8 @@ const electronUpdater = require("electron-updater");
 electronUpdater.autoUpdater.autoDownload = true;
 electronUpdater.autoUpdater.setFeedURL({
   provider: "github",
-  owner: "IsmailovWD",
-  repo: "crm-bitriks-1c-front",
+  owner: "MuhiddinWebDev",
+  repo: "frontend",
   private: false,
   vPrefixedTagName: true
 });
@@ -33,8 +33,11 @@ async function createWindow() {
     webPreferences: {
       preload,
       nodeIntegration: false,
+      // Disable Node.js integration
       contextIsolation: true,
-      sandbox: true
+      // Enable context isolation
+      sandbox: true,
+      webSecurity: false
     },
     autoHideMenuBar: true
   });
@@ -45,7 +48,7 @@ async function createWindow() {
     win.loadFile(indexHtml);
   }
   win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", new Date().toLocaleString());
+    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
   });
   win.webContents.setWindowOpenHandler(({ url: url2 }) => {
     if (url2.startsWith("https:"))
@@ -58,10 +61,10 @@ async function createWindow() {
       e.preventDefault();
       const options = {
         type: "question",
-        buttons: ["\u0412\u044B\u0445\u043E\u0434", "\u041E\u0442\u043C\u0435\u043D\u0430"],
+        buttons: ["Chiqish", "Bekor qilish"],
         defaultId: 0,
-        title: "\u0412\u044B\u0439\u0442\u0438 \u0438\u0437 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u044F",
-        message: "\u0412\u044B \u0443\u0432\u0435\u0440\u0435\u043D\u044B, \u0447\u0442\u043E \u0445\u043E\u0442\u0438\u0442\u0435 \u0432\u044B\u0439\u0442\u0438 \u0438\u0437 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u044F?",
+        title: "Ilovadan chiqing",
+        message: "Haqiqatan ham ilovadan chiqmoqchimisiz?",
         cancelId: 5
       };
       electron.dialog.showMessageBox(win, options).then((response) => {
@@ -105,6 +108,7 @@ electron.ipcMain.handle("open-win", (_, arg) => {
       contextIsolation: false
     }
   });
+  console.log(process.env);
   if (process.env.VITE_DEV_SERVER_URL) {
     childWindow.loadURL(`${url}#${arg}`);
   } else {
@@ -126,9 +130,9 @@ electron.app.on("ready", async () => {
 electronUpdater.autoUpdater.on("update-downloaded", async (info) => {
   const options = {
     type: "question",
-    buttons: ["\u041E\u0431\u043D\u043E\u0432\u043B\u044F\u0442\u044C"],
-    title: "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0432\u0435\u0440\u0441\u0438\u044F \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u0430",
-    message: "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u0432\u0435\u0440\u0441\u0438\u044F \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u0430",
+    buttons: ["Yang"],
+    title: "Eng so'nggi versiya yuklangan",
+    message: "Eng so'nggi versiya yuklangan",
     defaultId: 0,
     cancelId: 0
   };

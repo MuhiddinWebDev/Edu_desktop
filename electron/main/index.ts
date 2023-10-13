@@ -7,8 +7,8 @@ autoUpdater.autoDownload = true
 
 autoUpdater.setFeedURL({
   provider: 'github',
-  owner: 'IsmailovWD',
-  repo: 'crm-bitriks-1c-front',
+  owner: 'MuhiddinWebDev',
+  repo: 'frontend',
   private: false,
   vPrefixedTagName:true
 })
@@ -42,7 +42,7 @@ async function createWindow() {
       nodeIntegration: false, // Disable Node.js integration
       contextIsolation: true, // Enable context isolation
       sandbox: true,
-      // webSecurity: false,
+      webSecurity: false,
     },
     autoHideMenuBar: true
   })
@@ -68,10 +68,10 @@ async function createWindow() {
       e.preventDefault();
       const options: Electron.MessageBoxOptions = {
         type: 'question',
-        buttons: ['Выход','Отмена'],
+        buttons: ['Chiqish','Bekor qilish'],
         defaultId: 0,
-        title: 'Выйти из приложения',
-        message: 'Вы уверены, что хотите выйти из приложения?',
+        title: 'Ilovadan chiqing',
+        message: 'Haqiqatan ham ilovadan chiqmoqchimisiz?',
         cancelId: 5,
       };
   
@@ -122,7 +122,7 @@ ipcMain.handle('open-win', (_, arg) => {
       contextIsolation: false,
     },
   })
-
+  console.log(process.env)
   if (process.env.VITE_DEV_SERVER_URL) {
     childWindow.loadURL(`${url}#${arg}`)
   } else {
@@ -144,9 +144,9 @@ app.on('ready',async () => {
 autoUpdater.on('update-downloaded', async (info) => {
   const options: Electron.MessageBoxOptions = {
     type: 'question',
-    buttons: ['Обновлять'],
-    title: 'Последняя версия загружена',
-    message: 'Последняя версия загружена',
+    buttons: ['Yang'],
+    title: "Eng so'nggi versiya yuklangan",
+    message: "Eng so'nggi versiya yuklangan",
     defaultId: 0,
     cancelId: 0,
   };
