@@ -1,6 +1,6 @@
 {
   "name": "EduApp",
-  "version": "2.8.1",
+  "version": "1.1.0",
   "private": true,
   "main": "dist-electron/main/index.js",
   "description": "EduApp with Super future",
@@ -20,7 +20,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build && electron-builder",
+    "build": "vue-tsc --noEmit  && vite build && electron-builder",
     "preview": "vite preview",
     "test:unit": "vitest --environment jsdom --root src/",
     "@vicons/fa": "^0.12.0",
