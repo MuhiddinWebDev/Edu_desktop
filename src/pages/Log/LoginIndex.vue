@@ -3,9 +3,14 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import BranchService from "../../services/branch.service";
 import PaymentService from "../../services/softwarePayment.service";
+import LoadingUI from "../../components/Animation/Loading/Load.vue";
+
+import { PhoneFilled as phoneIcon } from "@vicons/carbon";
+import { LockClosed24Filled as lockIcon } from "@vicons/fluent";
 
 import axios from "axios";
 const router = useRouter();
+const showUI = ref(false)
 ///// sign in functionality
 const sign_form = ref(null);
 const signData = ref({
@@ -16,7 +21,13 @@ const sign_rules = {
   phone: {
     required: true,
     trigger: "blur",
-    message: "Telefon raqam majburiy",
+    validator: (rule, value) => {
+      if (value == "") {
+        return new Error("Telefon raqam majburiy!");
+      }else if(value.length < 12){
+        return new Error("Telefon raqamni to'liq kiriting")
+      }
+    },
   },
 
   password: {
@@ -29,6 +40,7 @@ const signin = async () => {
   try {
     const validate = await sign_form.value?.validate();
     axios.post("users/login", signData.value).then((res) => {
+      showUI.value = true;
       localStorage.setItem("token", res.token);
       localStorage.setItem("fullname", res.fullname);
       localStorage.setItem("phone", res.phone);
@@ -44,8 +56,12 @@ const signin = async () => {
       else if (res.role == "Teacher") {
         router.push({ name: "Teacher" });
       }
+    }).catch((err)=>{
+      showUI.value = false
     });
-  } catch (e) {}
+  } catch (e) {
+    showUI.value = false
+  }
 };
 const signKey = (e) => {
   if (e.key == "Enter") {
@@ -174,23 +190,24 @@ const localLogin = () => {
     }
   }
 };
-const getSoftwareData = ()=>{
-  PaymentService.checkDate().then((res)=>{
-    if(!res.live){
-      router.push({path:'/software-payment'});
-    }else{
-
-    }
-  }).catch((err)=>{
-    console.log("Login error")
-  })
-}
+const getSoftwareData = () => {
+  PaymentService.checkDate()
+    .then((res) => {
+      if (!res.live) {
+        router.push({ path: "/software-payment" });
+      } else {
+      }
+    })
+    .catch((err) => {
+      console.log("Login error");
+    });
+};
 ////////////////////////////////
 const onlyAllowNumber = (value) => !value || /^\d+$/.test(value);
 ////// input number format
 onMounted(() => {
-  getAllBranches();
-  getSoftwareData()
+  // getAllBranches();
+  getSoftwareData();
 });
 
 // const formatPhoneNumber = () => {
@@ -225,8 +242,8 @@ onMounted(() => {
       <p>Bosh sahifa</p>
     </div> -->
     <div class="login-box">
-      <n-card :bordered="false" :style="{ borderRadius: '15px' }">
-        <h1 class="text-center">Log In</h1>
+      <n-card :bordered="false" :style="{ borderRadius: '15px' }" size="large">
+        <h1 class="text-center">Kirish</h1>
         <n-form :model="signData" ref="sign_form" :rules="sign_rules">
           <div class="login-padding">
             <n-form-item @keydown="signKey" label="Telefon raqam" path="phone">
@@ -236,10 +253,15 @@ onMounted(() => {
                 size="large"
                 show-count
                 clearable
-                :style="{ width: '100%' }"
                 :allow-input="onlyAllowNumber"
                 v-model:value="signData.phone"
-              />
+              >
+                <template #prefix>
+                  <n-icon color="#000">
+                    <phoneIcon />
+                  </n-icon>
+                </template>
+              </n-input>
             </n-form-item>
             <n-form-item label="Parol" path="password">
               <n-input
@@ -249,9 +271,15 @@ onMounted(() => {
                 :minlength="8"
                 show-count
                 clearable
-                show-password-on="mousedown"
+                show-password-on="click"
                 v-model:value="signData.password"
-              />
+              >
+                <template #prefix>
+                  <n-icon color="#000">
+                    <lockIcon />
+                  </n-icon>
+                </template>
+              </n-input>
             </n-form-item>
             <div class="btn-center">
               <div class="btn-center_item">
@@ -260,6 +288,7 @@ onMounted(() => {
                   color="#333"
                   type="primary"
                   block
+                  round
                   size="large"
                 >
                   Kirish
@@ -378,19 +407,20 @@ onMounted(() => {
         </n-tabs> -->
       </n-card>
     </div>
+    <LoadingUI v-if="showUI" />
   </div>
 </template>
 
 <style scoped>
-.n-gradient-text {
-  font-size: 36px;
-}
-
-.card-tabs .n-tabs-nav--bar-type {
-  padding-left: 4px;
-}
-
 .login-padding {
   padding: 15px 0px;
+}
+.btn-center_item {
+  padding: 8px 20px;
+  padding-bottom: 0px;
+}
+.login .position-fixed{
+  border-radius: 10px;
+  background: #4b494956;
 }
 </style>
