@@ -1,5 +1,5 @@
 {
-  "name": "Edu App",
+  "name": "EduApp",
   "version": "2.8.1",
   "private": true,
   "main": "dist-electron/main/index.js",
