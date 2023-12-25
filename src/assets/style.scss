@@ -10,17 +10,28 @@
   }
 
   &::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-    border-radius: 10px;
+    width: 5px;
+    height: 5px;
+    border-radius: 5px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba(69, 62, 62, 0.25);
+    background: rgba(0, 0, 0, 0.25);
     border-radius: 5px;
   }
 }
-
+.software{
+  &-version{
+    position: fixed;
+    left: 12px;
+    bottom: 8px;
+    z-index: 10000;
+    b{
+      font-size: 12pt;
+      color: #fff;
+    }
+  }
+}
 .table {
   &-header {
     margin-bottom: 8px;
@@ -231,6 +242,7 @@
   justify-content: center;
   align-items: center;
   padding: 15px;
+  position: relative;
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -238,9 +250,6 @@
 
   &-box {
     min-width: 500px;
-    padding: 0px 12px;
-    background: #fff;
-    border-radius: 10px;
   }
 
   &-networks {
@@ -409,7 +418,7 @@
   &-action {
     margin: 4px 0px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 12px;
   }
 }
@@ -450,7 +459,7 @@
 
 .main {
   &-box {
-    padding:8px 12px;
+    padding: 12px calc(8% - 50px);
     clip-path: polygon(0 0, 100% 0, 95% 76%, 0% 100%);
     background: linear-gradient(
       245.29deg,
@@ -956,11 +965,11 @@
 
 .box {
   animation: showBox 0.3s ease-in-out forwards alternate;
-  height: calc(100vh - 98px);
+  height: calc(100vh - 93px);
   overflow: hidden;
   overflow: auto;
   &-wrapper {
-    padding: 8px 20px;
+    padding: 4px 15px;
   }
 
   &-header {
@@ -978,7 +987,7 @@
   }
 
   &-table {
-    padding: 6px 20px;
+    padding: 3px 15px;
     overflow: hidden;
     overflow: auto;
     transition: all 0.5s;
@@ -1001,6 +1010,9 @@
         border-radius: 3px;
       }
     }
+  }
+  &-chart{
+    align-items: center;
   }
 }
 
@@ -1096,6 +1108,18 @@
       rgb(237, 6, 17),
       rgb(148, 77, 33)
     );
+  }
+  &-success{
+    background-color: #06da69b7 !important;
+    font-weight: bold;
+  }
+  &-warning{
+    background-color: #f0a020b3 !important;
+    font-weight: bold;
+  }
+  &-error{
+    background-color: #f3371180 !important;
+    font-weight: bold;
   }
 }
 

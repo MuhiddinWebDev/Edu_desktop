@@ -4,55 +4,81 @@ import { useRouter } from "vue-router";
 import ReportService from "../../../services/report.service";
 import BranchService from "../../../services/branch.service";
 import UserService from "../../../services/users.service";
+import CourseService from "../../../services/course.service";
 import { useReportData } from "../../../stores/report";
 //// report variables
 const findRole = ref(localStorage.getItem("role"));
 
 const sverkaPass = useReportData();
-const teacherId = ref(null);
-const branchId = ref(JSON.parse(localStorage.getItem("filial_id")));
-const branchOption = ref([]);
-const studentOptions = ref([]);
 const router = useRouter();
+
+const filterOptions = ref({
+  filial_id:JSON.parse(localStorage.getItem("filial_id")),
+  teacher_id:null,
+  course_id: null,
+  type:null,
+  role:'Teacher'
+})
+
+
+const typeOption = ref([
+  {
+    type:1,
+    name:'Kirim'
+  },
+  {
+    type:0,
+    name:"Chiqim"
+  }
+])
+const branchOption = ref([]);
+const teacherOptions = ref([]);
+const courseOptions = ref([]);
+
 const getAllBranches = () => {
   BranchService.getAll().then((res) => {
     branchOption.value = res;
   });
 };
 
-const getAllStudents = (branch) => {
-  let sendData = {
-    filial_id: branch ? branch : branchId.value,
-    role: "Teacher",
-  };
-  UserService.getAll(sendData).then((res) => {
-    studentOptions.value = res;
+const getAllCourse = ()=>{
+  CourseService.getAll(filterOptions.value).then((res)=>{
+    courseOptions.value = res;
+  })
+}
+
+const getAllTeachers = () => {
+  UserService.getAll(filterOptions.value).then((res) => {
+    teacherOptions.value = res;
   });
 };
+
 const time_def = ref(new Date());
-const thisMonth = ref(
-  new Date(time_def.value.getFullYear(), time_def.value.getMonth())
-);
+const thisMonth = ref(new Date(time_def.value.getFullYear(), time_def.value.getMonth()));
 const range_date = ref([thisMonth.value.getTime(), time_def.value.getTime()]);
 ///// table veribles
 const loading = ref(false);
 const reportData = ref([]);
-const dayJS = inject("dayJS");
+
 ///// table veribles
 onMounted(() => {
   getAllBranches();
-  getAllStudents();
+  getAllTeachers();
+  getAllCourse()
 });
 const UpdateBranch = (branch) => {
-  getAllStudents(branch);
+  filterOptions.value.filial_id = branch;
+  getAllTeachers();
 };
 const showEmpty = ref(false);
 const showReport = () => {
   const sendData = {
     start_date: Math.floor(range_date.value[0] / 1000),
     end_date: Math.floor(range_date.value[1] / 1000),
-    teacher_id: teacherId.value,
-    filial_id: branchId.value,
+    course_id: filterOptions.value.course_id,
+    teacher_id: filterOptions.value.teacher_id,
+    filial_id: filterOptions.value.filial_id,
+    type: filterOptions.value.type
   };
   loading.value = true;
   ReportService.teacherReport(sendData).then((res) => {
@@ -64,10 +90,13 @@ const showReport = () => {
   });
 };
 const rowProps = (row) => {
+    console.log(row)
   sverkaPass.teacherSverka = {
     range_date: range_date.value,
     teacher_id: row.teacher.id,
-    filial_id: branchId.value,
+    filial_id: filterOptions.value.filial_id,
+    course_id: row.course.id,
+    type: filterOptions.value.type,
     show: true,
   };
   router.push({ path: "/sverka-teacher" });
@@ -89,7 +118,6 @@ const rowProps = (row) => {
               v-model:value="range_date"
               type="daterange"
               :style="{ width: '100%' }"
-              clearable
             />
           </n-input-group>
         </div>
@@ -99,7 +127,7 @@ const rowProps = (row) => {
             <n-select
               @update:value="UpdateBranch"
               :options="branchOption"
-              v-model:value="branchId"
+              v-model:value="filterOptions.filial_id"
               label-field="name"
               value-field="id"
               placeholder="Qidiruv"
@@ -108,12 +136,27 @@ const rowProps = (row) => {
           </n-input-group>
         </div>
 
+        <div class="search-action_item" >
+          <n-input-group>
+            <n-input-group-label>Kurs</n-input-group-label>
+            <n-select
+              :options="courseOptions"
+              v-model:value="filterOptions.course_id"
+              label-field="name"
+              value-field="id"
+              placeholder="Qidiruv"
+              filterable
+              clearable
+            ></n-select>
+          </n-input-group>
+        </div>
+
         <div class="search-action_item">
           <n-input-group>
             <n-input-group-label>O'qituvchi</n-input-group-label>
             <n-select
-              :options="studentOptions"
-              v-model:value="teacherId"
+              :options="teacherOptions"
+              v-model:value="filterOptions.teacher_id"
               label-field="fullname"
               value-field="id"
               placeholder="Qidiruv"
@@ -122,6 +165,22 @@ const rowProps = (row) => {
             ></n-select>
           </n-input-group>
         </div>
+
+        <div class="search-action_item" >
+          <n-input-group>
+            <n-input-group-label>Turi</n-input-group-label>
+            <n-select
+              :options="typeOption"
+              v-model:value="filterOptions.type"
+              label-field="name"
+              value-field="type"
+              placeholder="Qidiruv"
+              filterable
+              clearable
+            ></n-select>
+          </n-input-group>
+        </div>
+
         <div class="search-action_item">
           <n-button @click="showReport" type="success">Ko'rish</n-button>
         </div>
@@ -156,7 +215,7 @@ const rowProps = (row) => {
 
             <td>{{ item.teacher ? item.teacher.fullname : "" }}</td>
             <td>{{ item.course ? item.course.name : "" }}</td>
-            <td class="text-right">
+            <td class="text-right" :class="item.begin_total <= 0 ? 'status-success':'status-error'">
               {{
                 new Intl.NumberFormat("ru-Ru", {
                   style: "decimal",
@@ -184,7 +243,7 @@ const rowProps = (row) => {
                 }).format(item.chiqim)
               }}
             </td>
-            <td class="text-right">
+            <td class="text-right" :class="item.end_total <= 0 ? 'status-success':'status-error'">
               {{
                 new Intl.NumberFormat("ru-Ru", {
                   style: "decimal",
@@ -240,16 +299,11 @@ const rowProps = (row) => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .report-data-row {
   cursor: pointer;
 }
 
-.box-table {
-  max-height: calc(100vh - 190px);
-  overflow: hidden;
-  overflow: auto;
-}
 .report-empty {
   padding: 20px;
 }

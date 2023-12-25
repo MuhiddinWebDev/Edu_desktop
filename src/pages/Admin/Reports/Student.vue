@@ -4,16 +4,45 @@ import { useRouter } from "vue-router";
 import ReportService from "../../../services/report.service";
 import BranchService from "../../../services/branch.service";
 import UsersService from "../../../services/users.service";
+import CourseService from "../../../services/course.service";
+import GroupService from "../../../services/groups.service";
+
 import { useReportData } from "../../../stores/report";
 //// report variables
 const sverkaPass = useReportData();
-const studentId = ref(null);
 
+const time_def = ref(new Date());
+const thisMonth = ref(new Date(time_def.value.getFullYear(), time_def.value.getMonth()))
+const range_date = ref([thisMonth.value.getTime(), time_def.value.getTime()]);
+
+const filterData = ref({
+  start_date: Math.floor(range_date.value[0] / 1000),
+  end_date: Math.floor(range_date.value[1] / 1000),
+  student_id: null,
+  course_id: null,
+  group_id: null,
+  filial_id: JSON.parse(localStorage.getItem("filial_id")),
+  type: null,
+});
+const filterOptions = ref({
+  filial_id: filterData.value.filial_id,
+  role: 'User'
+})
 const findRole = ref(localStorage.getItem("role"));
-const branchId = ref(JSON.parse(localStorage.getItem("filial_id")));
-
+const typeOption = ref([
+  {
+    type: 1,
+    name: "Kirim"
+  },
+  {
+    type: 0,
+    name: "Chiqim"
+  }
+])
 const branchOption = ref([]);
 const studentOptions = ref([]);
+const courseOptions = ref([]);
+const groupOptions = ref([]);
 const router = useRouter();
 
 const getAllBranches = () => {
@@ -21,44 +50,42 @@ const getAllBranches = () => {
     branchOption.value = res;
   });
 };
-
-const getAllStudents = (branch) => {
-  let sendData = {
-    filial_id: branch ? branch : branchId.value,
-    role: "User",
-  };
-  UsersService.getAll(sendData).then((res) => {
+const getAllCourses = () => {
+  CourseService.getAll(filterOptions.value).then((res) => {
+    courseOptions.value = res;
+  })
+}
+const getAllGroup = () => {
+  GroupService.getAll(filterOptions.value).then((res) => {
+    groupOptions.value = res;
+  })
+}
+const getAllStudents = () => {
+  UsersService.getAll(filterOptions.value).then((res) => {
     studentOptions.value = res;
   });
 };
-const time_def = ref(new Date());
-const thisMonth = ref(
-  new Date(time_def.value.getFullYear(), time_def.value.getMonth())
-);
-const range_date = ref([thisMonth.value.getTime(), time_def.value.getTime()]);
+;
 ///// table veribles
 const loading = ref(false);
 const reportData = ref([]);
-const dayJS = inject("dayJS");
 ///// table veribles
 onMounted(() => {
   getAllBranches();
   getAllStudents();
+  getAllCourses();
+  getAllGroup();
 });
 const UpdateBranch = (branch) => {
   getAllStudents(branch);
 };
+
 const showReport = () => {
-  const sendData = {
-    start_date: Math.floor(range_date.value[0] / 1000),
-    end_date: Math.floor(range_date.value[1] / 1000),
-    student_id: studentId.value,
-    filial_id: branchId.value,
-  };
   loading.value = true;
-  ReportService.studentReport(sendData).then((res) => {
+  filterData.value.start_date = Math.floor(range_date.value[0] / 1000);
+  filterData.value.end_date = Math.floor(range_date.value[1] / 1000);
+  ReportService.studentReport(filterData.value).then((res) => {
     reportData.value = res;
-    console.log(res)
     loading.value = false;
   });
 };
@@ -67,7 +94,10 @@ const rowProps = (row) => {
   sverkaPass.studentSverka = {
     range_date: range_date.value,
     student_id: row.user.id,
-    filial_id: branchId.value,
+    course_id: row.course.id,
+    group_id: row.group.id,
+    filial_id: filterData.value.filial_id,
+    type: filterData.value.type,
     show: true,
   };
   router.push({ path: "/sverka-student" });
@@ -85,55 +115,57 @@ const rowProps = (row) => {
         <div class="search-action_item">
           <n-input-group>
             <n-input-group-label>Sana</n-input-group-label>
-            <n-date-picker
-              v-model:value="range_date"
-              type="daterange"
-              :style="{ width: '100%' }"
-              clearable
-            />
+            <n-date-picker v-model:value="range_date" type="daterange" :style="{ width: '100%' }" />
           </n-input-group>
         </div>
         <div class="search-action_item" v-if="findRole == 'SuperAdmin'">
           <n-input-group>
             <n-input-group-label>Filial</n-input-group-label>
-            <n-select
-              @update:value="UpdateBranch"
-              :options="branchOption"
-              v-model:value="branchId"
-              label-field="name"
-              value-field="id"
-              placeholder="Qidiruv"
-              filterable
-            ></n-select>
+            <n-select @update:value="UpdateBranch" :options="branchOption" v-model:value="filterData.filial_id"
+              label-field="name" value-field="id" placeholder="Qidiruv" filterable></n-select>
+          </n-input-group>
+        </div>
+
+        <div class="search-action_item">
+          <n-input-group>
+            <n-input-group-label>Kurs</n-input-group-label>
+            <n-select :options="courseOptions" v-model:value="filterData.course_id" label-field="name" value-field="id"
+              placeholder="Qidiruv" filterable clearable></n-select>
+          </n-input-group>
+        </div>
+
+        <div class="search-action_item">
+          <n-input-group>
+            <n-input-group-label>Guruh</n-input-group-label>
+            <n-select :options="groupOptions" v-model:value="filterData.group_id" label-field="name" value-field="id"
+              placeholder="Qidiruv" filterable clearable></n-select>
           </n-input-group>
         </div>
 
         <div class="search-action_item">
           <n-input-group>
             <n-input-group-label>Talaba</n-input-group-label>
-            <n-select
-              :options="studentOptions"
-              v-model:value="studentId"
-              label-field="fullname"
-              value-field="id"
-              placeholder="Qidiruv"
-              filterable
-              clearable
-            ></n-select>
+            <n-select :options="studentOptions" v-model:value="filterData.student_id" label-field="fullname"
+              value-field="id" placeholder="Qidiruv" filterable clearable></n-select>
           </n-input-group>
         </div>
+
+        <div class="search-action_item">
+          <n-input-group>
+            <n-input-group-label>Turi</n-input-group-label>
+            <n-select :options="typeOption" v-model:value="filterData.type" label-field="name" value-field="type"
+              placeholder="Qidiruv" filterable clearable></n-select>
+          </n-input-group>
+        </div>
+
         <div class="search-action_item">
           <n-button @click="showReport" type="success">Ko'rish</n-button>
         </div>
+
       </div>
     </div>
     <div class="box-table">
-      <n-table
-        :bordered="true"
-        :single-line="false"
-        size="small"
-        style="min-width: 1420px"
-      >
+      <n-table :bordered="true" :single-line="false" size="small" style="min-width: 1420px">
         <thead>
           <tr>
             <th style="width: 50px">№</th>
@@ -148,18 +180,13 @@ const rowProps = (row) => {
           </tr>
         </thead>
         <tbody class="table-scroll">
-          <tr
-            class="report-data-row"
-            v-for="(item, index) in reportData.data"
-            :key="index"
-            @dblclick="rowProps(item)"
-          >
+          <tr class="report-data-row" v-for="(item, index) in reportData.data" :key="index" @dblclick="rowProps(item)">
             <td class="text-center" style="width: 50px">{{ index + 1 }}</td>
 
             <td>{{ item.user ? item.user.fullname : "" }}</td>
             <td>{{ item.group ? item.group.name : "" }}</td>
             <td>{{ item.course ? item.course.name : "" }}</td>
-            <td class="text-right">
+            <td class="text-right" :class="item.begin_total >= 0 ? 'status-success' : 'status-error'">
               {{
                 new Intl.NumberFormat("ru-Ru", {
                   style: "decimal",
@@ -195,7 +222,7 @@ const rowProps = (row) => {
                 }).format(item.chiqim)
               }}
             </td>
-            <td class="text-right">
+            <td class="text-right" :class="item.end_total >= 0 ? 'status-success' : 'status-error'">
               {{
                 new Intl.NumberFormat("ru-Ru", {
                   style: "decimal",
@@ -261,16 +288,15 @@ const rowProps = (row) => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .report-data-row {
   cursor: pointer;
 }
 
 .box-table {
-  max-height: calc(100vh - 190px);
-  overflow: hidden;
-  overflow: auto;
+  max-height: calc(100vh - 250px);
 }
+
 .report-empty {
   padding: 20px;
 }

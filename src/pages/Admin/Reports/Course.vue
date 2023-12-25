@@ -9,9 +9,24 @@ import { useReportData } from "../../../stores/report";
 const coursePass = useReportData()
 const courseId = ref(null);
 
+const filterOption = ref({
+  course_id:null,
+  type: null,
+  filial_id:JSON.parse(localStorage.getItem("filial_id")),
+})
 const findRole = ref(localStorage.getItem("role"));
 const branchId = ref(JSON.parse(localStorage.getItem("filial_id")));
 
+const typeOption = ref([
+  {
+    type:1,
+    name:"Kirim"
+  },
+  {
+    type:0,
+    name: "Chiqim"
+  }
+])
 const branchOption = ref([]);
 const courseOptions = ref([]);
 const router = useRouter();
@@ -22,10 +37,7 @@ const getAllBranches = () => {
 };
 
 const getAllCourses = (branch) => {
-  let sendData = {
-    filial_id: branch ? branch : branchId.value,
-  };
-  CourseService.searchModel(sendData).then((res) => {
+  CourseService.searchModel(filterOption.value).then((res) => {
     courseOptions.value = res;
   });
 };
@@ -51,8 +63,9 @@ const showReport = () => {
   const sendData = {
     start_date: Math.floor(range_date.value[0] / 1000),
     end_date: Math.floor(range_date.value[1] / 1000),
-    filial_id: branchId.value,
-    course_id: courseId.value,
+    filial_id: filterOption.value.filial_id,
+    course_id:filterOption.value.course_id,
+    type: filterOption.value.type
   };
   loading.value = true;
   ReportService.courseReport(sendData).then((res) => {
@@ -68,7 +81,8 @@ const rowProps = (row) => {
   coursePass.courseSverka = {
     range_date: range_date.value,
     course_id: row.course.id,
-    filial_id: branchId.value,
+    filial_id: filterOption.value.filial_id,
+    type: filterOption.value.type,
     show: true,
   }
   router.push({path:"/sverka-course"})
@@ -90,7 +104,6 @@ const rowProps = (row) => {
               v-model:value="range_date"
               type="daterange"
               :style="{width:'100%'}"
-              clearable
             />
           </n-input-group>
         </div>
@@ -100,7 +113,7 @@ const rowProps = (row) => {
             <n-select
               @update:value="UpdateBranch"
               :options="branchOption"
-              v-model:value="branchId"
+              v-model:value="filterOption.filial_id"
               label-field="name"
               value-field="id"
               placeholder="Qidiruv"
@@ -114,9 +127,24 @@ const rowProps = (row) => {
             <n-input-group-label>Kurs</n-input-group-label>
             <n-select
               :options="courseOptions"
-              v-model:value="courseId"
+              v-model:value="filterOption.course_id"
               label-field="name"
               value-field="id"
+              placeholder="Qidiruv"
+              filterable
+              clearable
+            ></n-select>
+          </n-input-group>
+        </div>
+
+        <div class="search-action_item">
+          <n-input-group>
+            <n-input-group-label>Turi</n-input-group-label>
+            <n-select
+              :options="typeOption"
+              v-model:value="filterOption.type"
+              label-field="name"
+              value-field="type"
               placeholder="Qidiruv"
               filterable
               clearable
@@ -149,7 +177,7 @@ const rowProps = (row) => {
           >
             <td class="text-center" style="width: 50px">{{ index + 1 }}</td>
             <td>{{ item.course ? item.course.name : "" }}</td>
-            <td class="text-right ">
+            <td class="text-right " :class="item.begin_total >= 0 ? 'status-success':'status-error'">
               {{
                 new Intl.NumberFormat("ru-Ru", {
                   style: "decimal",
@@ -177,13 +205,14 @@ const rowProps = (row) => {
                 }).format(item.chiqim)
               }}
             </td>
-            <td class="text-right ">
+            <td class="text-right " :class="item.end_total >= 0 ? 'status-success':'status-error'"  >
               {{
                 new Intl.NumberFormat("ru-Ru", {
                   style: "decimal",
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 }).format(item.end_total)
+                
               }}
             </td>
 
@@ -221,16 +250,11 @@ const rowProps = (row) => {
   </div>
 </template>
 
-<style>
+<style scoped>
 .report-data-row {
   cursor: pointer;
 }
 
-.box-table {
-  max-height: calc(100vh - 190px);
-  overflow: hidden;
-  overflow: auto;
-}
 .report-empty {
   padding: 20px;
 }
